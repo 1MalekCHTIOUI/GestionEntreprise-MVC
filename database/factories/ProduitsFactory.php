@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Categories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -36,7 +37,7 @@ class ProduitsFactory extends Factory
             'ficheTechnique' => $this->faker->word,
             'publicationSocial' => $this->faker->boolean,
             'fraisTransport' => $this->faker->randomFloat(2, 0, 1000),
-            'idCategorie' => 1,
+            'idCategorie' => Categories::factory(),
             'imagePrincipale' => $this->faker->imageUrl(),
             'active' => $this->faker->boolean
         ];

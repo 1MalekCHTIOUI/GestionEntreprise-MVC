@@ -36,7 +36,7 @@ class Produits extends Model
 
     public function accessoires()
     {
-        return $this->belongsToMany(Accessoires::class, 'produits_accessoires','idProduit', 'idAccessoire')->withPivot('qte')->withTimestamps();;
+        return $this->belongsToMany(Accessoires::class, 'produits_accessoires', 'idProduit', 'idAccessoire')->withPivot('qte')->withTimestamps();;
     }
 
     public function images()
@@ -47,5 +47,12 @@ class Produits extends Model
     public function categories()
     {
         return $this->belongsTo(Categories::class, 'idCategorie');
+    }
+
+    public function devis()
+    {
+        return $this->belongsToMany(Devis::class, 'devis_produits', 'idProduit', 'idDevis')
+            ->withPivot('qte')
+            ->withTimestamps();
     }
 }

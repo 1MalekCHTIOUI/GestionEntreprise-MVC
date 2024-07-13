@@ -217,4 +217,23 @@ class AccessoiresController extends Controller
             ]);
         }
     }
+
+    public function addAccessoireQte(Request $request)
+    {
+        $request->validate([
+            'accessory_id' => 'required|exists:accessoires,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $accessoire = Accessoires::find($request->accessory_id);
+        $accessoire->qte += $request->quantity;
+        $accessoire->save();
+    }
+
+    public function findByTitle(string $title)
+    {
+
+        $accessoires = Accessoires::where('titre', 'like', '%' . $title . '%')->get();
+        return response()->json($accessoires);
+    }
 }

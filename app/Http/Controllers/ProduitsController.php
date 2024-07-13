@@ -10,6 +10,10 @@ use App\Models\Accessoires;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Exceptions\DatabaseException;
+use App\Models\Client;
+use App\Models\ProduitsAccessoires;
+use Exception;
+use GuzzleHttp\Psr7\Message;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -84,11 +88,11 @@ class ProduitsController extends Controller
             'matiers' => 'required',
             'description' => 'required',
             'descriptionTechnique' => 'required',
-            'ficheTechnique' => 'file',
+            'ficheTechnique' => 'file|nullable',
             'publicationSocial' => 'required',
             'fraisTransport' => 'required|numeric',
             'idCategorie' => 'required',
-            'imagePrincipale' => 'image',
+            'imagePrincipale' => 'image|nullable',
             'active' => 'required|boolean',
             'accessoires' => 'required',
             'images' => 'array'
@@ -132,10 +136,10 @@ class ProduitsController extends Controller
 
             foreach ($accessoires as $accessoire) {
                 $produit->accessoires()->attach($accessoire['idAccessoire'], ['qte' => $accessoire['qte']]);
-                $accessory = Accessoires::find($accessoire['idAccessoire']);
-                $accessory->qte -= $accessoire['qte'];
+                // $accessory = Accessoires::find($accessoire['idAccessoire']);
+                // $accessory->qte -= $accessoire['qte'];
 
-                $accessory->save();
+                // $accessory->save();
             }
             Historique::create([
                 'table' => 'Produits',
@@ -154,7 +158,12 @@ class ProduitsController extends Controller
                 'function' => __FUNCTION__
             ]);
 
-            return response()->json(['message' => 'Failed to save produit'], 500);
+            $existingProduit = Produits::where('ref', $validatedData['ref'])->first();
+            if ($existingProduit) {
+                return response()->json(['message' => 'Product with the same reference already exists'], 400);
+            } else {
+                return response()->json(['message' => 'Failed to save product'], 500);
+            }
         }
     }
 
@@ -265,29 +274,9 @@ class ProduitsController extends Controller
         }
 
 
-
-        $existingAccessoires = $produit->accessoires->pluck('id')->toArray();
-        $requestedAccessoires = collect(json_decode($request->accessoires, true))->pluck('idAccessoire')->toArray();
-
-        $removedAccessoires = array_diff($existingAccessoires, $requestedAccessoires);
-        foreach ($removedAccessoires as $removedAccessoireId) {
-            $accessoire = Accessoires::find($removedAccessoireId);
-            $pivotRow = $produit->accessoires()->where('idAccessoire', $removedAccessoireId)->first();
-            if ($accessoire && $pivotRow) {
-                $accessoire->qte += $pivotRow->pivot->qte;
-                $accessoire->save();
-            }
-        }
-
-
-
-        // Get the IDs of the existing images that should be kept
         $existingImages = $request->input('existing_images', []);
-
-        // Get the existing images of the product
         $produitImages = $produit->images;
 
-        // Iterate over the existing images
         foreach ($produitImages as $image) {
             if (!in_array($image->id, $existingImages)) {
 
@@ -296,34 +285,21 @@ class ProduitsController extends Controller
             }
         }
 
+        $existingAccessoires = $produit->accessoires->pluck('id')->toArray();
+        $requestedAccessoires = collect(json_decode($request->accessoires, true))->pluck('idAccessoire')->toArray();
 
-
+        $removedAccessoires = array_diff($existingAccessoires, $requestedAccessoires);
 
         $produit->accessoires()->detach($removedAccessoires);
-
         $accessoiresData = [];
         foreach (json_decode($request->accessoires, true) as $accessoire) {
             $idAccessoire = $accessoire['idAccessoire'];
             $qte = $accessoire['qte'];
-            $accessoireModel = Accessoires::find($idAccessoire);
-            if ($accessoireModel) {
-                if (in_array($idAccessoire, $existingAccessoires)) {
-                    $pivotRow = $produit->accessoires()->where('idAccessoire', $idAccessoire)->first();
-                    if ($pivotRow) {
-                        $difference = $pivotRow->pivot->qte - $qte;
-                        $accessoireModel->qte += $difference;
-                        $accessoireModel->save();
-                    }
-                } else {
-                    $accessoireModel->qte -= $qte;
-                    $accessoireModel->save();
-                }
-            }
+
             $accessoiresData[$idAccessoire] = ['qte' => $qte];
         }
 
         $produit->accessoires()->sync($accessoiresData);
-
 
         try {
             $produit->update($validatedData);
@@ -332,11 +308,6 @@ class ProduitsController extends Controller
                     $fileName = time() . '_' . $image->getClientOriginalName();
                     $path = $image->storeAs('assets/images/produits', $fileName, 'public');
                     try {
-                        // $test = Images::create([
-                        //     'idProduit' => $produit->id,
-                        //     'titreImg' => '/storage/' . $path,
-                        //     'date' => now(),
-                        // ]);
                         $test = new Images();
                         $test->idProduit = $produit->id;
                         $test->titreImg = '/storage/' . $path;
@@ -367,7 +338,51 @@ class ProduitsController extends Controller
                 'class' => __CLASS__,
                 'function' => __FUNCTION__
             ]);
-            return response()->json(['message' => 'Failed to edit produit'], 500);
+            $existingProduit = Produits::where('ref', $validatedData['ref'])->first();
+            if ($existingProduit) {
+                return response()->json(['message' => 'Un produit avec la même référence existe déjà'], 400);
+            } else {
+                return response()->json(['message' => "Échec de l'enregistrement du produit"], 500);
+            }
         }
+    }
+
+    public function addProduitQte(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:produits,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = Produits::find($request->product_id);
+        $product->qte += $request->quantity;
+        $product->save();
+
+        $accessories = $product->accessoires;
+
+        try {
+            foreach ($accessories as $accessory) {
+
+                $newQte = $accessory->pivot->qte * $request->quantity;
+                $accessory->qte -= $newQte;
+                $accessory->save();
+            }
+
+            return response()->json(['message' => 'Product and associated accessories updated successfully.']);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function findByRef($ref)
+    {
+        $devis = Produits::where('ref', $ref)->with('accessoires')->get();
+        return response()->json($devis);
+    }
+
+    public function findByTitle($titre)
+    {
+        $devis = Produits::where('titre', 'like', '%' . $titre . '%')->with('accessoires')->get();
+        return response()->json($devis);
     }
 }
