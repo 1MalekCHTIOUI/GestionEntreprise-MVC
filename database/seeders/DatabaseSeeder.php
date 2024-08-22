@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
         \App\Models\State::factory(5)->create();
         \App\Models\Client::factory(5)->create();
         \App\Models\Tax::factory(5)->create();
+        \App\Models\Parameter::factory()->count(1)->create();
+
 
 
 

@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('factures', function (Blueprint $table) {
             $table->id();
-            $table->string('ref')->unique();
+            $table->string('ref')->unique()->nullable();
             $table->foreignId('idDevis')->constrained('devis')->onDelete('cascade');
             $table->date('date');
+            $table->string('status')->default('Not Paid');
             $table->decimal('totalHT', 10, 2);
             $table->decimal('totalTTC', 10, 2);
+            $table->decimal('montant_restant', 10, 2);
+
             $table->timestamps();
         });
     }

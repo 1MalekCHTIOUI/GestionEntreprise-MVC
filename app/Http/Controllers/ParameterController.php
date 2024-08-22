@@ -29,22 +29,22 @@ class ParameterController extends Controller
         if ($request->hasFile('timbre_fiscale')) {
             $fileName = $request->file('timbre_fiscale')->getClientOriginalName();
 
-            $path = $request->file('timbre_fiscale')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['timbre_fiscale'] = '/storage/' . $path;
+            $request->file('timbre_fiscale')->storeAs('assets/images/parameters', $fileName, 'public');
+            $data['timbre_fiscale'] = $fileName;
         }
 
         if ($request->hasFile('cachet')) {
             $fileName = $request->file('cachet')->getClientOriginalName();
 
-            $path = $request->file('cachet')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['cachet'] = '/storage/' . $path;
+            $request->file('cachet')->storeAs('assets/images/parameters', $fileName, 'public');
+            $data['cachet'] = $fileName;
         }
 
         if ($request->hasFile('logo')) {
             $fileName = $request->file('logo')->getClientOriginalName();
 
-            $path = $request->file('logo')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['logo'] = '/storage/' . $path;
+            $request->file('logo')->storeAs('assets/images/parameters', $fileName, 'public');
+            $data['logo'] = $fileName;
         }
 
         $parameter = Parameter::create($data);
@@ -62,8 +62,8 @@ class ParameterController extends Controller
             // }
             $fileName = $request->file('timbre_fiscale')->getClientOriginalName();
 
-            $path = $request->file('timbre_fiscale')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['timbre_fiscale'] = '/storage/' . $path;
+            $request->file('timbre_fiscale')->storeAs('assets/images/parameters', $fileName, 'public');
+            $data['timbre_fiscale'] = $fileName;
         }
 
         if ($request->hasFile('cachet')) {
@@ -72,8 +72,8 @@ class ParameterController extends Controller
             // }
             $fileName = $request->file('cachet')->getClientOriginalName();
 
-            $path = $request->file('cachet')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['cachet'] = '/storage/' . $path;
+            $request->file('cachet')->storeAs('assets/images/parameters', $fileName, 'public');
+            $data['cachet'] = $fileName;
         }
 
         if ($request->hasFile('logo')) {
@@ -82,8 +82,8 @@ class ParameterController extends Controller
             // }
             $fileName = $request->file('logo')->getClientOriginalName();
 
-            $path = $request->file('logo')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['logo'] = '/storage/' . $path;
+            $request->file('logo')->storeAs('assets/images/parameters', $fileName, 'public');
+            $data['logo'] = $fileName;
         }
 
         $parameter->update($data);

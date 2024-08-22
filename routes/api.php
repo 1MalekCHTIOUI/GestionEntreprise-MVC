@@ -9,11 +9,19 @@ use App\Http\Controllers\DevisController;
 use App\Http\Controllers\ProduitsController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\AccessoiresController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\ChargesController;
+use App\Http\Controllers\CreditController;
+use App\Http\Controllers\CutController;
 use App\Http\Controllers\ExceptionsController;
 use App\Http\Controllers\FacturesController;
 use App\Http\Controllers\HistoriquesController;
+use App\Http\Controllers\MailingController;
 use App\Http\Controllers\ParameterController;
+use App\Http\Controllers\PromotionsController;
+use App\Http\Controllers\StatistiquesController;
 use App\Http\Controllers\TaxeController;
+use App\Http\Controllers\TresorieController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,13 +65,18 @@ Route::group([
     Route::get('', [DevisController::class, 'index']);
     Route::get('allPaginate', [DevisController::class, 'getDevisPaginate']);
     Route::get('{id}', [DevisController::class, 'show']);
+    Route::get('search/{searchQuery}', [DevisController::class, 'search']);
 
     Route::post('create', [DevisController::class, 'store']);
     Route::put('edit/{id}', [DevisController::class, 'update']);
     Route::delete('delete/{id}', [DevisController::class, 'destroy']);
+    Route::post('send-pdf/{clientId}', [MailingController::class, 'sendPdfToClient']);
+    Route::patch('{id}/status', [DevisController::class, 'updateStatus']);
 });
 
-Route::get('clients', [DevisController::class, 'getClients']);
+Route::get('clients/allPaginate', [ClientController::class, 'getClientsPaginate']);
+Route::get('clients/search/{name}', [DevisController::class, 'searchClientByName']);
+Route::apiResource('clients', ClientController::class);
 
 
 Route::group([
@@ -74,10 +87,12 @@ Route::group([
     Route::get('allPaginate', [ProduitsController::class, 'findAllPaginate']);
     Route::post('create', [ProduitsController::class, 'createProduit']);
     Route::put('addQte', [ProduitsController::class, 'addProduitQte']);
+    Route::get('search', [ProduitsController::class, 'search']);
 
     Route::get('{id}', [ProduitsController::class, 'findProduit']);
     Route::get('/find/{ref}/ref', [ProduitsController::class, 'findByRef']);
     Route::get('/find/{title}/titre', [ProduitsController::class, 'findByTitle']);
+    Route::get('findByRefAndTitle/{term}', [ProduitsController::class, 'findByRefAndTitle']);
     Route::put('edit/{id}', [ProduitsController::class, 'editProduit']);
     Route::delete('delete/{id}', [ProduitsController::class, 'deleteProduit']);
 });
@@ -98,7 +113,6 @@ Route::group([
 });
 
 
-Route::post('factures/create/{devisId}', [FacturesController::class, 'createFacture']);
 
 
 Route::group([
@@ -133,8 +147,62 @@ Route::group([
     Route::get('devis/{id}', [FacturesController::class, 'getFactureByDevis']);
 
     Route::post('/create/{id}', [FacturesController::class, 'createFacture']);
+    Route::get('remainingBalance/{numFacture}', [FacturesController::class, 'getRemainingBalance']);
+    Route::post('create/{devisId}', [FacturesController::class, 'createFacture']);
+});
+
+
+
+Route::group([
+    'prefix' => 'tresorie'
+], function ($router) {
+    Route::get('allPaginate', [TresorieController::class, 'getTresoriePaginate']);
+
+    Route::get('', [TresorieController::class, 'index']);
+    Route::post('', [TresorieController::class, 'store']);
+    Route::get('{id}', [TresorieController::class, 'show']);
+    Route::put('{id}', [TresorieController::class, 'update']);
+    Route::delete('/{id}', [TresorieController::class, 'destroy']);
+    Route::get('autocomplete-facture', [TresorieController::class, 'autocompleteFacture']);
+
+    Route::get('searchByClientName/{clientName}', [TresorieController::class, 'searchByClientName']);
+    Route::get('searchByFactureRef/{factureRef}', [TresorieController::class, 'searchByFactureRef']);
+    Route::get('search/{searchQuery}', [TresorieController::class, 'search']);
+    Route::get('facturePaiements/{numFacture}', [TresorieController::class, 'getFacturePaiements']);
+});
+
+Route::group([
+    'prefix' => 'credits'
+], function ($router) {
+    Route::get('searchByClientName/{clientName}', [CreditController::class, 'searchByClientName']);
+    Route::get('searchByFactureRef/{factureRef}', [CreditController::class, 'searchByFactureRef']);
+    Route::get('allPaginate', [CreditController::class, 'getCreditPaginate']);
+    Route::get('', [CreditController::class, 'index']);
+});
+
+Route::get('send-devis/{id}', [MailingController::class, 'sendDevis']);
+Route::post('send-promotion/{id}', [MailingController::class, 'sendPromotion']);
+Route::group([
+    'prefix' => 'stats'
+], function ($router) {
+    Route::get('devis-comparison-range', [StatistiquesController::class, 'getDevisComparison']);
+    Route::get('devis-status-range', [StatistiquesController::class, 'getDevisStatus']);
+    Route::get('devis-range', [StatistiquesController::class, 'getDevisByDateRange']);
+    Route::get('products-success-range', [StatistiquesController::class, 'getMostSuccessfulProducts']);
+    Route::get('profits-range', [StatistiquesController::class, 'getProfitsReport']);
+    Route::get('profits', [StatistiquesController::class, 'getProfits']);
+    Route::get('clients-range', [StatistiquesController::class, 'getMostSuccessfulClients']);
+    Route::get('charges-range', [StatistiquesController::class, 'getChargesReport']);
+    Route::get('factures-range', [StatistiquesController::class, 'getFacturesReport']);
 });
 
 
 Route::apiResource('parameters', ParameterController::class);
+Route::get('taxes/search', [TaxeController::class, 'search']);
 Route::apiResource('taxes', TaxeController::class);
+Route::apiResource('promotions', PromotionsController::class);
+Route::apiResource('charges', ChargesController::class);
+
+
+
+Route::post('/optimize-cuts', [CutController::class, 'optimize']);

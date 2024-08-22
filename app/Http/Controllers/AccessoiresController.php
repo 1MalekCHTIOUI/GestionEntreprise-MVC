@@ -10,12 +10,13 @@ use App\Exceptions\DatabaseException;
 
 class AccessoiresController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $accessoires = Accessoires::orderBy('created_at', 'desc')->paginate(3);
+        $accessoires = Accessoires::orderBy('created_at', 'desc')->paginate(config('global.pagination.perPage'));
         if ($request->ajax()) {
             return view('accessoires.liste', compact('accessoires'))->render();
         }
@@ -48,8 +49,8 @@ class AccessoiresController extends Controller
         if ($request->hasFile('image')) {
             $fileName = time() . '_' . $request->file('image')->getClientOriginalName();
 
-            $path = $request->file('image')->storeAs('assets/images/accessoires', $fileName, 'public');
-            $validatedData['image'] = '/storage/' . $path;
+            $request->file('image')->storeAs('assets/images/accessoires', $fileName, 'public');
+            $validatedData['image'] = $fileName;
         }
 
         try {
@@ -83,7 +84,7 @@ class AccessoiresController extends Controller
     }
     public function findAllPaginate()
     {
-        $accessoires = Accessoires::orderBy('created_at', 'desc')->paginate(10);
+        $accessoires = Accessoires::orderBy('created_at', 'desc')->paginate(config('global.pagination.perPage'));
         return response()->json($accessoires);
     }
 
@@ -130,8 +131,8 @@ class AccessoiresController extends Controller
         if ($request->hasFile('image')) {
             $fileName = time() . '_' . $request->file('image')->getClientOriginalName();
 
-            $path = $request->file('image')->storeAs('assets/images/accessoires', $fileName, 'public');
-            $validatedData['image'] = '/storage/' . $path;
+            $request->file('image')->storeAs('assets/images/accessoires', $fileName, 'public');
+            $validatedData['image'] = $fileName;
         }
 
 
@@ -218,16 +219,36 @@ class AccessoiresController extends Controller
         }
     }
 
+    // public function addAccessoireQte(Request $request)
+    // {
+    //     $request->validate([
+    //         'accessory_id' => 'required|exists:accessoires,id',
+    //         'quantity' => 'required|integer|min:1',
+    //     ]);
+
+    //     $accessoire = Accessoires::find($request->accessory_id);
+    //     $accessoire->qte += $request->quantity;
+    //     $accessoire->save();
+    // }
+
     public function addAccessoireQte(Request $request)
     {
         $request->validate([
             'accessory_id' => 'required|exists:accessoires,id',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|not_in:0',
         ]);
 
         $accessoire = Accessoires::find($request->accessory_id);
-        $accessoire->qte += $request->quantity;
+        $newQte = $accessoire->qte + $request->quantity;
+
+        if ($newQte < 0) {
+            return response()->json(['message' => 'Insufficient accessory stock.'], 400);
+        }
+
+        $accessoire->qte = $newQte;
         $accessoire->save();
+
+        return response()->json(['message' => 'Accessory quantity updated successfully.']);
     }
 
     public function findByTitle(string $title)

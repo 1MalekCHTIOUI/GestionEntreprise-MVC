@@ -55,4 +55,9 @@ class Produits extends Model
             ->withPivot('qte')
             ->withTimestamps();
     }
+
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotions_produits', 'idProduit', 'idPromotion');
+    }
 }

@@ -14,7 +14,9 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "opcodesio/log-viewer": "^3.10",
         "php-open-source-saver/jwt-auth": "^2.3",
+        "rmunate/spell-number": "^4.2",
         "spatie/laravel-permission": "^6.9",
         "wisdom-diala/countrypkg-laravel": "^1.0"
     },

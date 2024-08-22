@@ -14,7 +14,7 @@ class CategoriesController extends Controller
 
     public function index(Request $request)
     {
-        $categories = Categories::with('parent')->orderBy('created_at', 'desc')->paginate(10);
+        $categories = Categories::with('parent')->orderBy('created_at', 'desc')->paginate(config('global.pagination.perPage'));
         if ($request->ajax()) {
             return view('categories.liste', compact('categories'))->render();
         }
@@ -49,7 +49,7 @@ class CategoriesController extends Controller
 
     public function getAllCategoriesPaginate()
     {
-        $categories = Categories::with('parent')->orderBy('created_at', 'desc')->paginate(10);
+        $categories = Categories::with('parent')->orderBy('created_at', 'desc')->paginate(config('global.pagination.perPage'));
         return response()->json($categories);
     }
 

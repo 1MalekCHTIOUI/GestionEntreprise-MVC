@@ -7,7 +7,9 @@ use App\Http\Controllers\Api\Profile\PasswordController;
 use App\Http\Controllers\Api\Profile\PasswordResetController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
-
+use App\Http\Controllers\CountryController;
+use App\Http\Controllers\LabelController;
+use App\Http\Controllers\StateController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('auth/register', [AuthController::class, 'register']);
@@ -40,3 +42,9 @@ Route::middleware(['auth:api'])->group(function () {
 Route::apiResource('permissions', PermissionsController::class);
 Route::apiResource('roles', RoleController::class);
 Route::post('/clients', [ClientController::class, 'store']);
+
+
+Route::apiResource('countries', CountryController::class);
+Route::apiResource('states', StateController::class);
+Route::apiResource('labels', LabelController::class);
+Route::get('states/country/{countryId}', [StateController::class, 'getStatesByCountry']);

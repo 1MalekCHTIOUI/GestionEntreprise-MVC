@@ -9,9 +9,13 @@ class Devis extends Model
 {
     use HasFactory;
 
+    const STATUS_STILL = 'still';
+    const STATUS_DONE = 'done';
+    const STATUS_REFUSED = 'refused';
+
     protected $fillable = [
         // 'idClient', 'idProduit', 'qte', 'date', 'valid_until'
-        'client_id', 'date', 'valid_until', 'status'
+        'client_id', 'ref', 'date', 'valid_until', 'status'
     ];
 
     protected $dates = ['date', 'valid_until'];
@@ -31,5 +35,11 @@ class Devis extends Model
     public function taxes()
     {
         return $this->belongsToMany(Tax::class, 'devis_taxes', 'idDevis', 'idTaxe');
+    }
+
+    public function generateDevisNumber()
+    {
+        $year = date('Y');
+        return sprintf('DEV-%03d-%d', $this->id, $year);
     }
 }

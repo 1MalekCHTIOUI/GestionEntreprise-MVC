@@ -28,4 +28,9 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\ImportStates::class,
     ];
+
+    protected $middleware = [
+
+        \App\Http\Middleware\CorsMiddleware::class,
+    ];
 }

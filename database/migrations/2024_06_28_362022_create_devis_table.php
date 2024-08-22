@@ -16,9 +16,9 @@ return new class extends Migration
 
             // $table->unsignedBigInteger('idProduit');
             // $table->integer('qte');
+            $table->string('ref')->unique()->nullable();
             $table->date('date')->default(now());
-            $table->date('valid_until');
-            $table->boolean('status')->default(false);
+            $table->enum('status', ['done', 'still', 'refused'])->default('still');
 
 
             // Foreign keys

@@ -26,7 +26,7 @@ class ProduitsController extends Controller
     {
         $produits = Produits::with(['accessoires', 'images', 'categories'])
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(config('global.pagination.perPage'));
         if ($request->ajax()) {
             return view('produits.liste', compact('produits'))->render();
         }
@@ -79,37 +79,39 @@ class ProduitsController extends Controller
             'qte' => 'required|integer',
             'qteMinGros' => 'required|integer',
             'prixGros' => 'required|numeric',
-            'promo' => 'required|numeric',
-            'longueur' => 'required|numeric',
-            'largeur' => 'required|numeric',
-            'hauteur' => 'required|numeric',
-            'profondeur' => 'required|numeric',
-            'tempsProduction' => 'required|integer',
-            'matiers' => 'required',
-            'description' => 'required',
-            'descriptionTechnique' => 'required',
-            'ficheTechnique' => 'file|nullable',
-            'publicationSocial' => 'required',
-            'fraisTransport' => 'required|numeric',
+            'promo' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'hauteur' => 'nullable|numeric',
+            'profondeur' => 'nullable|numeric',
+            'tempsProduction' => 'nullable|integer',
+            'matiers' => 'nullable',
+            'description' => 'nullable',
+            'descriptionTechnique' => 'nullable',
+            'ficheTechnique' => 'nullable|file',
+            'publicationSocial' => 'nullable',
+            'fraisTransport' => 'nullable|numeric',
             'idCategorie' => 'required',
-            'imagePrincipale' => 'image|nullable',
-            'active' => 'required|boolean',
+            'imagePrincipale' => 'nullable|image',
+            'active' => 'nullable|boolean',
             'accessoires' => 'required',
             'images' => 'array'
+        ], [
+            'idCategorie.required' => 'Category is required.',
         ]);
 
         if ($request->hasFile('imagePrincipale')) {
             $fileName = time() . '_' . $request->file('imagePrincipale')->getClientOriginalName();
 
-            $path = $request->file('imagePrincipale')->storeAs('assets/images/produits', $fileName, 'public');
-            $validatedData['imagePrincipale'] = '/storage/' . $path;
+            $request->file('imagePrincipale')->storeAs('assets/images/produits', $fileName, 'public');
+            $validatedData['imagePrincipale'] = $fileName;
         }
 
         if ($request->hasFile('ficheTechnique')) {
             $fileName = time() . '_' . $request->file('ficheTechnique')->getClientOriginalName();
 
-            $path = $request->file('ficheTechnique')->storeAs('assets/fichiers/produits', $fileName, 'public');
-            $validatedData['ficheTechnique'] = '/storage/' . $path;
+            $request->file('ficheTechnique')->storeAs('assets/fichiers/produits', $fileName, 'public');
+            $validatedData['ficheTechnique'] = $fileName;
         }
 
 
@@ -128,7 +130,7 @@ class ProduitsController extends Controller
                     $path = $image->storeAs('assets/images/produits', $fileName, 'public');
                     Images::create([
                         'idProduit' => $produit->id,
-                        'titreImg' => '/storage/' . $path,
+                        'titreImg' => $fileName,
                         'date' => now(),
                     ]);
                 }
@@ -210,12 +212,9 @@ class ProduitsController extends Controller
 
     public function findAllPaginate()
     {
-        $produits = Produits::with(['accessoires', 'images', 'categories'])->orderBy('created_at', 'desc')->paginate(10);
+        $produits = Produits::with(['accessoires', 'images', 'categories'])->orderBy('created_at', 'desc')->paginate(config('global.pagination.perPage'));
         return response()->json($produits);
     }
-
-
-
 
     public function findProduit(string $id)
     {
@@ -239,38 +238,40 @@ class ProduitsController extends Controller
             'qte' => 'required|integer',
             'qteMinGros' => 'required|integer',
             'prixGros' => 'required|numeric',
-            'promo' => 'required|numeric',
-            'longueur' => 'required|numeric',
-            'largeur' => 'required|numeric',
-            'hauteur' => 'required|numeric',
-            'profondeur' => 'required|numeric',
-            'tempsProduction' => 'required|integer',
-            'matiers' => 'required',
-            'description' => 'required',
-            'descriptionTechnique' => 'required',
-            'ficheTechnique' => 'sometimes',
-            'publicationSocial' => 'required',
-            'fraisTransport' => 'required|numeric',
+            'promo' => 'nullable|numeric',
+            'longueur' => 'nullable|numeric',
+            'largeur' => 'nullable|numeric',
+            'hauteur' => 'nullable|numeric',
+            'profondeur' => 'nullable|numeric',
+            'tempsProduction' => 'nullable|integer',
+            'matiers' => 'nullable',
+            'description' => 'nullable',
+            'descriptionTechnique' => 'nullable',
+            'ficheTechnique' => 'nullable',
+            'publicationSocial' => 'nullable',
+            'fraisTransport' => 'nullable|numeric',
             'idCategorie' => 'required',
-            'imagePrincipale' => 'sometimes',
-            'active' => 'required|boolean',
+            'imagePrincipale' => 'nullable',
+            'active' => 'nullable|boolean',
             'accessoires' => 'required',
-            'images' => 'array',
+            'images' => 'nullable',
             'existing_images' => 'array'
+        ], [
+            'idCategorie.required' => 'Category is required.',
         ]);
 
         if ($request->hasFile('imagePrincipale')) {
             $fileName = time() . '_' . $request->file('imagePrincipale')->getClientOriginalName();
 
-            $path = $request->file('imagePrincipale')->storeAs('assets/images/produits', $fileName, 'public');
-            $validatedData['imagePrincipale'] = '/storage/' . $path;
+            $request->file('imagePrincipale')->storeAs('assets/images/produits', $fileName, 'public');
+            $validatedData['imagePrincipale'] = $fileName;
         }
 
         if ($request->hasFile('ficheTechnique')) {
             $fileName = time() . '_' . $request->file('ficheTechnique')->getClientOriginalName();
 
-            $path = $request->file('ficheTechnique')->storeAs('assets/fichiers/produits', $fileName, 'public');
-            $validatedData['ficheTechnique'] = '/storage/' . $path;
+            $request->file('ficheTechnique')->storeAs('assets/fichiers/produits', $fileName, 'public');
+            $validatedData['ficheTechnique'] = $fileName;
         }
 
 
@@ -306,11 +307,11 @@ class ProduitsController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $fileName = time() . '_' . $image->getClientOriginalName();
-                    $path = $image->storeAs('assets/images/produits', $fileName, 'public');
+                    $image->storeAs('assets/images/produits', $fileName, 'public');
                     try {
                         $test = new Images();
                         $test->idProduit = $produit->id;
-                        $test->titreImg = '/storage/' . $path;
+                        $test->titreImg = $fileName;
                         $test->date = now();
                         $test->save();
                     } catch (\Exception $th) {
@@ -347,24 +348,65 @@ class ProduitsController extends Controller
         }
     }
 
+    // public function addProduitQte(Request $request)
+    // {
+    //     $request->validate([
+    //         'product_id' => 'required|exists:produits,id',
+    //         'quantity' => 'required|integer|min:1',
+    //     ]);
+
+    //     $product = Produits::find($request->product_id);
+    //     $product->qte += $request->quantity;
+    //     $product->save();
+
+    //     $accessories = $product->accessoires;
+
+    //     try {
+    //         foreach ($accessories as $accessory) {
+
+    //             $newQte = $accessory->pivot->qte * $request->quantity;
+    //             $accessory->qte -= $newQte;
+    //             $accessory->save();
+    //         }
+
+    //         return response()->json(['message' => 'Product and associated accessories updated successfully.']);
+    //     } catch (Exception $e) {
+    //         return response()->json(['message' => $e->getMessage()], 500);
+    //     }
+    // }
     public function addProduitQte(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:produits,id',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|not_in:0',
         ]);
 
         $product = Produits::find($request->product_id);
-        $product->qte += $request->quantity;
+        $newProductQte = $product->qte + $request->quantity;
+
+        if ($newProductQte < 0) {
+            return response()->json(['message' => 'Insufficient product stock.'], 400);
+        }
+
+        $product->qte = $newProductQte;
         $product->save();
 
         $accessories = $product->accessoires;
 
         try {
             foreach ($accessories as $accessory) {
+                $newQte = $accessory->pivot->qte * abs($request->quantity);
 
-                $newQte = $accessory->pivot->qte * $request->quantity;
-                $accessory->qte -= $newQte;
+                if ($request->quantity > 0) {
+                    $accessory->qte -= $newQte;
+                } else {
+                    $accessory->qte += $newQte;
+                }
+
+                if ($accessory->qte < 0) {
+                    return response()->json(['message' => 'Insufficient accessory stock.'], 400);
+                }
+
                 $accessory->save();
             }
 
@@ -373,7 +415,6 @@ class ProduitsController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
-
     public function findByRef($ref)
     {
         $devis = Produits::where('ref', $ref)->with('accessoires')->get();
@@ -384,5 +425,40 @@ class ProduitsController extends Controller
     {
         $devis = Produits::where('titre', 'like', '%' . $titre . '%')->with('accessoires')->get();
         return response()->json($devis);
+    }
+
+
+
+
+    public function findByRefAndTitle($term)
+    {
+        $devis = Produits::where('ref', 'like', '%' . $term . '%')
+            ->orWhere('titre', 'like', '%' . $term . '%')
+            ->with(['accessoires', 'categories'])
+            ->paginate(config('global.pagination.perPage'));
+        return response()->json($devis);
+    }
+
+
+
+
+
+
+
+
+
+    public function search(Request $request)
+    {
+        Log::error('Search results:', ['results' => $request->all()]);
+
+        $query = $request->input('query');
+        $limit = $request->input('limit', 30);
+
+        if ($query) {
+            $results = Produits::where('ref', 'LIKE', '%' . $query . '%')->limit($limit)->get();
+        } else {
+            $results = Produits::limit($limit)->get();
+        }
+        return response()->json($results);
     }
 }

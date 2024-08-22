@@ -22,17 +22,17 @@ class StoreClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'nom_societe' => 'required|string|max:255',
-            'tel1' => 'required|string|max:15',
+            'nom' => 'string|max:255',
+            'prenom' => 'string|max:255',
+            'nom_societe' => 'string|max:255',
+            'tel1' => 'string|max:15',
             'tel2' => 'nullable|string|max:15',
             'whatsapp' => 'nullable|string|max:15',
             'facebook_page' => 'nullable|string|max:255',
             'instagram_account' => 'nullable|string|max:255',
             'linkedin_page' => 'nullable|string|max:255',
             'site_web' => 'nullable|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'email|max:255',
             'pays_id' => 'required|exists:countries,id',
             'gouvernerat_id' => 'required|exists:states,id',
             'adresse' => 'required|string|max:255',
@@ -40,7 +40,7 @@ class StoreClientRequest extends FormRequest
             'secteur' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'label_id' => 'required|exists:labels,id',
-            'logo' => 'nullable|string|max:255',
+            'logo' => 'nullable|mimes:png,jpg,jpeg,gif|max:2048',
         ];
     }
 }

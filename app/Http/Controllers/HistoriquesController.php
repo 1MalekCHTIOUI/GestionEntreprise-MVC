@@ -9,7 +9,7 @@ class HistoriquesController extends Controller
 {
     function getHistoriquesPaginate()
     {
-        $historiques = Historique::orderBy('created_at', 'desc')->paginate(10);
+        $historiques = Historique::orderBy('created_at', 'desc')->paginate(config('global.pagination.perPage'));
         return response()->json($historiques, 200);
     }
 
@@ -20,7 +20,7 @@ class HistoriquesController extends Controller
             ->orWhere('action', 'like', '%' . $request->search_string . '%')
             ->orWhere('id_record', 'like', '%' . $request->search_string . '%')
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(config('global.pagination.perPage'));
 
         if ($historiques->count() >= 1) {
             return response()->json(
@@ -39,7 +39,7 @@ class HistoriquesController extends Controller
     public function sort(Request $request)
     {
         $sortDirection = $request->get('sort', 'asc');
-        $historiques = Historique::orderBy('created_at', $sortDirection)->paginate(10);
+        $historiques = Historique::orderBy('created_at', $sortDirection)->paginate(config('global.pagination.perPage'));
         return response()->json(
             $historiques,
             200
