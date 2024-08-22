@@ -42,4 +42,9 @@ class Devis extends Model
         $year = date('Y');
         return sprintf('DEV-%03d-%d', $this->id, $year);
     }
+
+    public function items()
+    {
+        return $this->hasMany(DevisItem::class);
+    }
 }

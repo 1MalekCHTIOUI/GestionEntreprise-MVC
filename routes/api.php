@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 require __DIR__ . '/Auth.php';
 
-
+Route::apiResource('parameters', ParameterController::class);
 Route::group([
     'prefix' => 'categories'
 ], function ($router) {
@@ -75,6 +75,7 @@ Route::group([
 });
 
 Route::get('clients/allPaginate', [ClientController::class, 'getClientsPaginate']);
+Route::get('clients/findPaginate', [ClientController::class, 'findClientPaginate']);
 Route::get('clients/search/{name}', [DevisController::class, 'searchClientByName']);
 Route::apiResource('clients', ClientController::class);
 
@@ -197,7 +198,7 @@ Route::group([
 });
 
 
-Route::apiResource('parameters', ParameterController::class);
+
 Route::get('taxes/search', [TaxeController::class, 'search']);
 Route::apiResource('taxes', TaxeController::class);
 Route::apiResource('promotions', PromotionsController::class);

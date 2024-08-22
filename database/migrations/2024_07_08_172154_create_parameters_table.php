@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        
         Schema::create('parameters', function (Blueprint $table) {
             $table->id();
             $table->string('timbre_fiscale')->nullable();
             $table->string('tva')->nullable();
+            $table->string('fodec')->nullable();
             $table->string('cachet')->nullable();
             $table->string('logo')->nullable();
             $table->string('titre')->nullable();

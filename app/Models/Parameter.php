@@ -12,6 +12,7 @@ class Parameter extends Model
     protected $fillable = [
         'timbre_fiscale',
         'tva',
+        'fodec',
         'cachet',
         'logo',
         'titre',

@@ -24,14 +24,19 @@ class ParameterController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->all();
+        $data = $request->validate([
 
-        if ($request->hasFile('timbre_fiscale')) {
-            $fileName = $request->file('timbre_fiscale')->getClientOriginalName();
+            'timbre_fiscale' => 'nullable|string',
+            'tva' => 'nullable|string',
+            'cachet' => 'nullable|file',
+            'logo' => 'nullable|file',
+            'titre' => 'nullable|string',
+            'tel' => 'nullable|string',
+            'email' => 'nullable|email',
+            'adresse' => 'nullable|string',
+            'numero_fiscal' => 'nullable|string',
+        ]);
 
-            $request->file('timbre_fiscale')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['timbre_fiscale'] = $fileName;
-        }
 
         if ($request->hasFile('cachet')) {
             $fileName = $request->file('cachet')->getClientOriginalName();
@@ -54,17 +59,21 @@ class ParameterController extends Controller
     public function update(Request $request, $id)
     {
         $parameter = Parameter::findOrFail($id);
-        $data = $request->all();
+        $data = $request->validate([
 
-        if ($request->hasFile('timbre_fiscale')) {
-            // if ($parameter->timbre_fiscale) {
-            //     Storage::disk('public')->delete($parameter->timbre_fiscale);
-            // }
-            $fileName = $request->file('timbre_fiscale')->getClientOriginalName();
+            'timbre_fiscale' => 'nullable|string',
+            'tva' => 'nullable|string',
+            'fodec' => 'nullable|string',
+            'cachet' => 'nullable|file',
+            'logo' => 'nullable|file',
+            'titre' => 'nullable|string',
+            'tel' => 'nullable|string',
+            'email' => 'nullable|email',
+            'adresse' => 'nullable|string',
+            'numero_fiscal' => 'nullable|string',
+        ]);
 
-            $request->file('timbre_fiscale')->storeAs('assets/images/parameters', $fileName, 'public');
-            $data['timbre_fiscale'] = $fileName;
-        }
+
 
         if ($request->hasFile('cachet')) {
             // if ($parameter->cachet) {

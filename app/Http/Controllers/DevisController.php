@@ -39,6 +39,11 @@ class DevisController extends Controller
                 'items.*.quantity' => 'required|integer|min:1',
                 'taxes' => 'required|array',
 
+
+                'add_items' => 'sometimes|array',
+                'add_items.*.description' => 'required|string|max:255',
+                'add_items.*.quantity' => 'required|integer|min:1',
+                'add_items.*.price' => 'required|numeric|min:0',
             ]);
 
             $devis = Devis::create([
@@ -47,8 +52,10 @@ class DevisController extends Controller
             ]);
 
             $devis->ref = $devis->generateDevisNumber();
+
             $devis->status = Devis::STATUS_STILL;
             $devis->save();
+
             Historique::create([
                 'table' => 'Devis',
                 'id_record' => $devis->id,
@@ -58,7 +65,9 @@ class DevisController extends Controller
                 'changed_at' => now(),
                 'changed_by' =>  null,
             ]);
+
             $taxIds = collect($request->taxes)->pluck('tax.id')->toArray();
+
             Log::info($request->taxes);
 
             $devis->taxes()->attach($taxIds);
@@ -70,8 +79,20 @@ class DevisController extends Controller
                     'qte' => $item['quantity'],
                 ]);
             }
+            if (isset($validatedData['add_items'])) {
+                foreach ($validatedData['add_items'] as $additionalItem) {
+                    $devis->items()->create([
+                        'description' => $additionalItem['description'],
+                        'quantity' => $additionalItem['quantity'],
+                        'price' => $additionalItem['price'],
+                        'total' => $additionalItem['quantity'] * $additionalItem['price'],
+                    ]);
+                }
+            }
 
             return response()->json($devis->load('produits'), 201);
+
+
         } catch (\Exception $th) {
             Log::channel('database')->error($th->getMessage(), [
                 'class' => __CLASS__,
@@ -103,7 +124,10 @@ class DevisController extends Controller
                 'items.*.produit.id' => 'required|integer',
                 'items.*.quantity' => 'required|integer|min:1',
                 'taxes' => 'required|array',
-
+                'add_items' => 'sometimes|array',
+                'add_items.*.description' => 'required|string|max:255',
+                'add_items.*.quantity' => 'required|integer|min:1',
+                'add_items.*.price' => 'required|numeric|min:0',
             ]);
 
             $devis = Devis::findOrFail($id);

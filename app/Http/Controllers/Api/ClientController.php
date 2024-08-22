@@ -31,6 +31,22 @@ class ClientController extends Controller
         );
     }
 
+    public function findClientPaginate(Request $request): JsonResponse
+    {
+        $clients = Client::where('nom', 'LIKE', '%' . $request->search . '%')
+            ->orWhere('prenom', 'LIKE', '%' . $request->search . '%')
+            ->orWhere('nom_societe', 'LIKE', '%' . $request->search . '%')
+            ->orWhere('tel1', 'LIKE', '%' . $request->search . '%')
+            ->orWhere('email', 'LIKE', '%' . $request->search . '%')
+            ->orWhere('adresse', 'LIKE', '%' . $request->search . '%')
+            ->orderBy('created_at', 'desc')
+            ->paginate(config('global.pagination.perPage'));
+
+        return response()->json(
+            $clients
+        );
+    }
+
     public function show($id): JsonResponse
     {
         $client = Client::find($id);
