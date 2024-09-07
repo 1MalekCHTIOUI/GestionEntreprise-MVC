@@ -6,19 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreClientRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -27,7 +19,7 @@ class StoreClientRequest extends FormRequest
             'nom_societe' => 'string|max:255',
             'tel1' => 'string|max:15',
             'tel2' => 'nullable|string|max:15',
-            'whatsapp' => 'nullable|string|max:15',
+            'whatsapp' => 'nullable|string|max:15',  // Validation rule for whatsapp
             'facebook_page' => 'nullable|string|max:255',
             'instagram_account' => 'nullable|string|max:255',
             'linkedin_page' => 'nullable|string|max:255',
@@ -43,4 +35,5 @@ class StoreClientRequest extends FormRequest
             'logo' => 'nullable|mimes:png,jpg,jpeg,gif|max:2048',
         ];
     }
+
 }

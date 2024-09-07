@@ -33,7 +33,7 @@ class MailingController extends Controller
                 'data_before' => null,
                 'data_after' => null,
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
             return response()->json(['message' => 'Quote sent successfully!']);
@@ -48,10 +48,12 @@ class MailingController extends Controller
 
     public function showDevis($id)
     {
-        $devis = Devis::with('client', 'produits')->findOrFail($id);
+        $devis = Devis::with(['client', 'produits', 'services', 'items', 'taxes'])->findOrFail($id);
         $parameters = Parameter::findOrFail(1); // Assuming parameters have a single row with id 1
 
-        return view('Email.devis', compact('devis', 'parameters'));
+
+
+        return view('Email.devis2', compact('devis', 'parameters'));
     }
     public function showPromotion($id)
     {
@@ -81,7 +83,7 @@ class MailingController extends Controller
                 'data_before' => null,
                 'data_after' => null,
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
             return response()->json(['message' => 'Newsletter sent successfully', 'promotion' => $promotion]);
@@ -100,12 +102,13 @@ class MailingController extends Controller
             $request->validate([
                 'file' => 'required|string',
             ]);
+            Log::info($clientId);
 
             $pdfBase64 = $request->input('file');
             $pdfContent = base64_decode(preg_replace('#^data:application/pdf;base64,#i', '', $pdfBase64));
 
             $client = Client::findOrFail($clientId);
-            Mail::to($client->email)->send(new DevisMailingAttachement($pdfContent));
+            Mail::to($client->email)->send(new DevisMailingAttachement($client, $pdfContent));
 
             // Historique::create([
             //     'table' => 'Devis',

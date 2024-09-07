@@ -22,6 +22,7 @@ class ParameterFactory extends Factory
         return [
             'timbre_fiscale' => '1',
             'tva' => '19',
+            'fodec' => '1',
             'cachet' => 'cachet.png',
             'logo' => 'logo.png',
             'titre' => 'Entreprise X',

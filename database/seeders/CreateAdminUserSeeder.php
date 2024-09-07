@@ -18,22 +18,21 @@ class CreateAdminUserSeeder extends Seeder
     {
         // Créer un utilisateur
         $user = User::create([
-            'name' => 'Admin',
+            'name' => 'super-admin',
             'email' => 'gestionentreprisee@gmail.com',
-            'name' => 'admin',
             'password' => Hash::make('admin123')
         ]);
 
         // Créer un rôle
-        $role = Role::create(['name' => 'admin']); // i7oteha f tableau roles
+        $role = Role::create(['name' => 'super-admin']);
 
         // Obtenir toutes les permissions
-        $permissions = Permission::pluck('id','id')->all(); // role liha permissions kol  tjib donner mn permissions a3tito id el kol mtaapermissions
+        $permissions = Permission::pluck('id','id')->all();
 
         // Assigner les permissions au rôle
-        $role->syncPermissions($permissions); /// syncPermissions t3abi donner f table ismo roles has prmissions
+        $role->syncPermissions($permissions);
 
         // Assigner le rôle à l'utilisateur
-        $user->assignRole([$role->id]); ///  bch ta3ty role mta3k hethy tsob f model has user,assignRole taati role l user
+        $user->assignRole([$role->id]);
     }
 }

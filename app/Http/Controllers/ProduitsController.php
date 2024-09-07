@@ -71,6 +71,7 @@ class ProduitsController extends Controller
      */
     public function createProduit(Request $request)
     {
+        Log::info($request->all());
         $validatedData = $request->validate([
             'titre' => 'required',
             'ref' => 'required',
@@ -84,6 +85,7 @@ class ProduitsController extends Controller
             'largeur' => 'nullable|numeric',
             'hauteur' => 'nullable|numeric',
             'profondeur' => 'nullable|numeric',
+            'couleur' => 'nullable',
             'tempsProduction' => 'nullable|integer',
             'matiers' => 'nullable',
             'description' => 'nullable',
@@ -95,7 +97,13 @@ class ProduitsController extends Controller
             'imagePrincipale' => 'nullable|image',
             'active' => 'nullable|boolean',
             'accessoires' => 'required',
-            'images' => 'array'
+            'images' => 'array',
+            'cuts' => 'required',
+            'cuts.*.largeur' => 'required|numeric|min:0',
+            'cuts.*.longueur' => 'required|numeric|min:0',
+            'cuts.*.epaisseur' => 'required|numeric|min:0',
+            'cuts.*.perimetre' => 'required|numeric|min:0',
+            
         ], [
             'idCategorie.required' => 'Category is required.',
         ]);
@@ -120,11 +128,7 @@ class ProduitsController extends Controller
 
             $accessoires = json_decode($request->input('accessoires'), true);
 
-
             if ($request->has('images')) {
-                Log::info($request->file('images'));
-                Log::info('--------');
-                Log::info($request->images);
                 foreach ($request->file('images') as $image) {
                     $fileName = time() . '_' . $image->getClientOriginalName();
                     $path = $image->storeAs('assets/images/produits', $fileName, 'public');
@@ -138,11 +142,13 @@ class ProduitsController extends Controller
 
             foreach ($accessoires as $accessoire) {
                 $produit->accessoires()->attach($accessoire['idAccessoire'], ['qte' => $accessoire['qte']]);
-                // $accessory = Accessoires::find($accessoire['idAccessoire']);
-                // $accessory->qte -= $accessoire['qte'];
-
-                // $accessory->save();
             }
+
+            $cuts = json_decode($request->input('cuts'), true);
+            foreach ($cuts as $cut) {
+                $produit->cuts()->create($cut);
+            }
+            
             Historique::create([
                 'table' => 'Produits',
                 'id_record' => $produit->id,
@@ -218,7 +224,7 @@ class ProduitsController extends Controller
 
     public function findProduit(string $id)
     {
-        $produit = Produits::with(['accessoires', 'images', 'categories'])
+        $produit = Produits::with(['accessoires', 'images', 'categories','cuts'])
             ->where('id', $id)
             ->get();
         return response()->json($produit);
@@ -243,6 +249,7 @@ class ProduitsController extends Controller
             'largeur' => 'nullable|numeric',
             'hauteur' => 'nullable|numeric',
             'profondeur' => 'nullable|numeric',
+            'couleur' => 'nullable',
             'tempsProduction' => 'nullable|integer',
             'matiers' => 'nullable',
             'description' => 'nullable',
@@ -255,7 +262,15 @@ class ProduitsController extends Controller
             'active' => 'nullable|boolean',
             'accessoires' => 'required',
             'images' => 'nullable',
-            'existing_images' => 'array'
+            'existing_images' => 'array',
+
+            'cuts' => 'required',
+            'cuts.*.largeur' => 'required|numeric|min:0',
+            'cuts.*.longueur' => 'required|numeric|min:0',
+            'cuts.*.epaisseur' => 'required|numeric|min:0',
+            'cuts.*.perimetre' => 'required|numeric|min:0',
+
+
         ], [
             'idCategorie.required' => 'Category is required.',
         ]);
@@ -304,6 +319,14 @@ class ProduitsController extends Controller
 
         try {
             $produit->update($validatedData);
+            $produit->cuts()->delete();
+
+            $cuts = json_decode($request->input('cuts'), true);
+
+            foreach ($cuts as $cut) {
+                $produit->cuts()->create($cut);
+            }
+
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
                     $fileName = time() . '_' . $image->getClientOriginalName();
@@ -348,32 +371,7 @@ class ProduitsController extends Controller
         }
     }
 
-    // public function addProduitQte(Request $request)
-    // {
-    //     $request->validate([
-    //         'product_id' => 'required|exists:produits,id',
-    //         'quantity' => 'required|integer|min:1',
-    //     ]);
 
-    //     $product = Produits::find($request->product_id);
-    //     $product->qte += $request->quantity;
-    //     $product->save();
-
-    //     $accessories = $product->accessoires;
-
-    //     try {
-    //         foreach ($accessories as $accessory) {
-
-    //             $newQte = $accessory->pivot->qte * $request->quantity;
-    //             $accessory->qte -= $newQte;
-    //             $accessory->save();
-    //         }
-
-    //         return response()->json(['message' => 'Product and associated accessories updated successfully.']);
-    //     } catch (Exception $e) {
-    //         return response()->json(['message' => $e->getMessage()], 500);
-    //     }
-    // }
     public function addProduitQte(Request $request)
     {
         $request->validate([
@@ -415,6 +413,8 @@ class ProduitsController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
+
     public function findByRef($ref)
     {
         $devis = Produits::where('ref', $ref)->with('accessoires')->get();
@@ -428,8 +428,6 @@ class ProduitsController extends Controller
     }
 
 
-
-
     public function findByRefAndTitle($term)
     {
         $devis = Produits::where('ref', 'like', '%' . $term . '%')
@@ -438,12 +436,6 @@ class ProduitsController extends Controller
             ->paginate(config('global.pagination.perPage'));
         return response()->json($devis);
     }
-
-
-
-
-
-
 
 
 

@@ -10,32 +10,39 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Log;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-
-
     public function __construct()
-{
-    $this->middleware('permission:employee-list|employee-create|employee-edit|employee-delete', ['only' => ['index']]);
-    $this->middleware('permission:employee-create', ['only' => ['create', 'store']]);
-    $this->middleware('permission:employee-edit', ['only' => ['edit', 'update']]);
-    $this->middleware('permission:employee-delete', ['only' => ['destroy']]);
-}
-
+    {
+        $this->middleware('permission:employee-list|employee-create|employee-edit|employee-delete', ['only' => ['index']]);
+        $this->middleware('permission:employee-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:employee-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:employee-delete', ['only' => ['destroy']]);
+    }
 
     public function index()
     {
-        $users = User::latest()->paginate(10);
-        return response()->json($users);
+        $users = User::with('roles')->latest()->get();
+
+        $transformedUsers = $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                // 'roles' => $user->roles->pluck('name')->toArray(),
+                'roles' => $user->roles->toArray(),
+            ];
+        });
+
+        return response()->json($transformedUsers);
     }
-
-
-
     public function store(StoreUserRequest $request): JsonResponse
     {
         $authenticatedUser = Auth::user();
+        $request->validated();
         if (!$authenticatedUser) {
             return response()->json([
                 'success' => false,
@@ -80,42 +87,55 @@ class UserController extends Controller
         ], 201);
     }
 
-
-
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('roles')->findOrFail($id);
         return response()->json($user);
     }
 
-
-
-    // public function edit(User $user): JsonResponse
-    // {
-    //     $roles = Role::pluck('name', 'name')->all();
-    //     $userRoles = $user->roles->pluck('name', 'name')->all();
-    //     return response()->json([
-    //         'user' => $user,
-    //         'roles' => $roles,
-    //         'userRoles' => $userRoles
-    //     ]);
-    // }
     public function update(UpdateUserRequest $request, User $user)
     {
-        // Utiliser les données validées à partir de la demande
-        $validatedData = $request->validated();
 
-        // Mettre à jour l'utilisateur avec les données validées
-        $user->update($validatedData);
 
-        // Retourner l'utilisateur mis à jour
-        return response()->json([
-            'success' => true,
-            'message' => 'Utilisateur mis à jour avec succès.',
-            'user' => $user
-        ]);
+        try {
+            $validatedData = $request->validated();
+            Log::info($validatedData);
+            // Update user data
+            $user->name = $validatedData['name'] ?? $user->name;
+            $user->email = $validatedData['email'] ?? $user->email;
+
+            if (!empty($validatedData['password'])) {
+                $user->password = Hash::make($validatedData['password']);
+            }
+
+            // Save the users
+            $user->save();
+
+            // Update role if provided
+            if (isset($validatedData['role'])) {
+                Log::info('Role: ', [$validatedData['role']]);
+                $role = Role::where('name', "=", $validatedData['role'])->first();
+                if ($role) {
+                    $user->roles()->sync([$role->id]);
+                } else {
+                    throw new \Exception('Role not found');
+                }
+            }
+
+            return response()->json(['message' => 'User updated successfully']);
+        } catch (\Exception $e) {
+            // Log the detailed error message
+            dd('User Update Error: ', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'validatedData' => $validatedData ?? null,
+                'user' => $user->toArray(),
+            ]);
+
+            // Return a JSON response with the error message
+            return response()->json(['message' => 'An error occurred while updating the user.'], 500);
+        }
     }
-
 
 
     public function destroy(User $user)

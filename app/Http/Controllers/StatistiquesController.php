@@ -78,7 +78,7 @@ class StatistiquesController extends Controller
             'devisNotSold' => $devisNotSold
         ]);
 
-        return response()->json($devisSold);
+        // return response()->json($devisSold);
     }
 
 
@@ -217,7 +217,7 @@ class StatistiquesController extends Controller
             'totalValeur' => $totalValeur
         ]);
 
-        return response()->json($charges);
+        // return response()->json($charges);
     }
 
     public function getFacturesReport(Request $request)

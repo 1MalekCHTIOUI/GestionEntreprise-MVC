@@ -7,6 +7,7 @@ use App\Models\Devis;
 use App\Models\Produits;
 use Illuminate\Http\Request;
 use App\Models\DevisProduits;
+use App\Models\DevisItem;
 use App\Models\Historique;
 use Illuminate\Http\Response;
 use PhpParser\Node\Stmt\TryCatch;
@@ -29,6 +30,7 @@ class DevisController extends Controller
 
     public function store(Request $request)
     {
+
         try {
 
             $request->validate([
@@ -37,18 +39,30 @@ class DevisController extends Controller
                 'items' => 'required|array',
                 'items.*.produit.id' => 'required|exists:produits,id',
                 'items.*.quantity' => 'required|integer|min:1',
-                'taxes' => 'required|array',
+                'taxes' => 'sometimes|array',
 
+                'totalHT' => 'required|numeric|min:0',
+                'totalServices' => 'required|numeric|min:0',
+                'totalRemises' => 'required|numeric|min:0',
+                'totalFraisLivraison' => 'required|numeric|min:0',
+                'totalTTC' => 'required|numeric|min:0',
 
-                'add_items' => 'sometimes|array',
-                'add_items.*.description' => 'required|string|max:255',
-                'add_items.*.quantity' => 'required|integer|min:1',
-                'add_items.*.price' => 'required|numeric|min:0',
+                'services' => 'sometimes|array',
+                'services.*.description' => 'required|string|max:255',
+                'services.*.quantity' => 'required|integer|min:1',
+                'services.*.cost' => 'required|numeric|min:0',
             ]);
 
             $devis = Devis::create([
                 'client_id' => $request->idClient,
                 'date' => $request->date,
+                'totalHT' => $request->totalHT,
+
+                'totalServices' => $request->totalServices,
+                'totalRemises' => $request->totalRemises,
+                'totalFraisLivraison' => $request->totalFraisLivraison,
+
+                'totalTTC' => $request->totalTTC,
             ]);
 
             $devis->ref = $devis->generateDevisNumber();
@@ -63,12 +77,11 @@ class DevisController extends Controller
                 'data_before' => null,
                 'data_after' => $devis->getAttributes(),
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
             $taxIds = collect($request->taxes)->pluck('tax.id')->toArray();
 
-            Log::info($request->taxes);
 
             $devis->taxes()->attach($taxIds);
 
@@ -79,26 +92,34 @@ class DevisController extends Controller
                     'qte' => $item['quantity'],
                 ]);
             }
-            if (isset($validatedData['add_items'])) {
-                foreach ($validatedData['add_items'] as $additionalItem) {
-                    $devis->items()->create([
-                        'description' => $additionalItem['description'],
-                        'quantity' => $additionalItem['quantity'],
-                        'price' => $additionalItem['price'],
-                        'total' => $additionalItem['quantity'] * $additionalItem['price'],
-                    ]);
-                }
+
+
+            // if (isset($validatedData['services']) && !empty($validatedData['services'])) {
+            // Log the received services data
+            // \Log::info('Received services:', $validatedData['services']);
+
+            foreach ($request->services as $service) {
+                // Log each service before creating
+                Log::info('Creating service:', $service);
+
+                DevisItem::create([
+                    'idDevis' => $devis->id,
+                    'description' => $service['description'],
+                    'qte' => $service['quantity'],
+                    'cost' => $service['cost']
+                ]);
             }
 
-            return response()->json($devis->load('produits'), 201);
 
+            return response()->json($devis->load('produits'), Response::HTTP_CREATED);
 
         } catch (\Exception $th) {
+            Log::error($th);
             Log::channel('database')->error($th->getMessage(), [
                 'class' => __CLASS__,
                 'function' => __FUNCTION__
             ]);
-            return response()->json(['message' => $th->getMessage()]);
+            return response()->json(['message' => $th->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -106,7 +127,7 @@ class DevisController extends Controller
     public function show($id)
     {
         // $devis = Devis::with('client', 'produits')->findOrFail($id);
-        $devis = Devis::with(['produits.accessoires', 'client', 'client.state', 'client.state.country', 'taxes'])->findOrFail($id);
+        $devis = Devis::with(['produits.accessoires', 'client', 'client.state', 'client.state.country', 'taxes', 'items'])->findOrFail($id);
         return response()->json($devis);
     }
 
@@ -119,15 +140,23 @@ class DevisController extends Controller
             $request->validate([
                 'idClient' => 'required|integer',
                 'date' => 'required|date',
-                'status' => 'nullable|in:still,done,refused',
+                // 'status' => 'nullable|in:still,done,refused',
                 'items' => 'required|array',
                 'items.*.produit.id' => 'required|integer',
                 'items.*.quantity' => 'required|integer|min:1',
-                'taxes' => 'required|array',
-                'add_items' => 'sometimes|array',
-                'add_items.*.description' => 'required|string|max:255',
-                'add_items.*.quantity' => 'required|integer|min:1',
-                'add_items.*.price' => 'required|numeric|min:0',
+                'taxes' => 'sometimes|array',
+
+                'totalHT' => 'required|numeric|min:0',
+                'totalServices' => 'required|numeric|min:0',
+                'totalRemises' => 'required|numeric|min:0',
+                'totalFraisLivraison' => 'required|numeric|min:0',
+                'totalTTC' => 'required|numeric|min:0',
+
+
+                'services' => 'sometimes|array',
+                'services.*.description' => 'required|string|max:255',
+                'services.*.quantity' => 'required|integer|min:1',
+                'services.*.cost' => 'required|numeric|min:0',
             ]);
 
             $devis = Devis::findOrFail($id);
@@ -135,7 +164,12 @@ class DevisController extends Controller
             $devis->update([
                 'client_id' => $request->idClient,
                 'date' => $request->date,
-                'status' => $request->status,
+                'totalHT' => $request->totalHT,
+                'totalServices' => $request->totalServices,
+                'totalRemises' => $request->totalRemises,
+                'totalFraisLivraison' => $request->totalFraisLivraison,
+                'totalTTC' => $request->totalTTC,
+                // 'status' => $request->status,
             ]);
 
             Historique::create([
@@ -145,7 +179,7 @@ class DevisController extends Controller
                 'data_before' => $dataBefore,
                 'data_after' => $devis->getAttributes(),
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
 
@@ -160,13 +194,24 @@ class DevisController extends Controller
                 $devis->produits()->attach($item['produit']['id'], ['qte' => $item['quantity']]);
             }
 
+            $devis->items()->delete();
+            foreach ($request->services as $service) {
+                $devis->items()->create([
+                    'idDevis' => $devis->id,
+                    'description' => $service['description'],
+                    'qte' => $service['quantity'],
+                    'cost' => $service['cost']
+                ]);
+            }
+
             return response()->json(['message' => 'Devis updated successfully']);
         } catch (\Exception $th) {
-            return response()->json(['message' => 'Devis failed: ' . $th->getMessage()]);
+
             Log::channel('database')->error($th->getMessage(), [
                 'class' => __CLASS__,
                 'function' => __FUNCTION__
             ]);
+            return response()->json(['message' => 'Devis failed: ' . $th->getMessage()]);
         }
     }
 
@@ -185,7 +230,7 @@ class DevisController extends Controller
                 'data_before' => $dataBefore,
                 'data_after' => null,
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
             return response()->json(null, 204);
@@ -240,5 +285,11 @@ class DevisController extends Controller
             $devis,
             Response::HTTP_OK
         );
+    }
+
+    public function getDevisItemByDevis($id)
+    {
+        $devisItem = DevisItem::where('idDevis', $id)->get();
+        return response()->json($devisItem);
     }
 }

@@ -15,7 +15,7 @@ class Devis extends Model
 
     protected $fillable = [
         // 'idClient', 'idProduit', 'qte', 'date', 'valid_until'
-        'client_id', 'ref', 'date', 'valid_until', 'status'
+        'client_id', 'ref', 'date', 'valid_until', 'status', 'totalHT', 'totalServices', 'totalRemises', 'totalFraisLivraison', 'totalTTC'
     ];
 
     protected $dates = ['date', 'valid_until'];
@@ -45,6 +45,6 @@ class Devis extends Model
 
     public function items()
     {
-        return $this->hasMany(DevisItem::class);
+        return $this->hasMany(DevisItem::class, 'idDevis');
     }
 }

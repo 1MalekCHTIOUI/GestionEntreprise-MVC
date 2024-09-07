@@ -108,7 +108,9 @@ class FacturesController extends Controller
 
     public function getFactureByDevis($idDevis)
     {
-        $facture = Factures::with(['devis.produits.accessoires', 'devis.client.state', 'devis.client.state.country', 'devis.taxes'])->where('idDevis', $idDevis)->first();
+        $facture = Factures::with([
+            'devis.produits.accessoires', 'devis.client.state', 
+            'devis.client.state.country', 'devis.taxes','devis.items'])->where('idDevis', $idDevis)->first();
         return response()->json($facture);
     }
 

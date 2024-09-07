@@ -35,13 +35,18 @@ use App\Http\Controllers\TresorieController;
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    if ($request->user()) {
+        return response()->json(['user' => $request->user()]);
+    } else {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
 });
+Route::get('/verifyToken', [AuthController::class, 'verifyToken'])->middleware('auth:api');
 
 require __DIR__ . '/Auth.php';
 
-Route::apiResource('parameters', ParameterController::class);
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'categories'
 ], function ($router) {
 
@@ -50,6 +55,7 @@ Route::group([
     Route::get('all', [CategoriesController::class, 'getAllCategories']);
     Route::get('children', [CategoriesController::class, 'findAllChildren']);
     Route::post('create', [CategoriesController::class, 'createCategory']);
+    Route::get('search', [CategoriesController::class, 'search']);
 
     Route::get('{id}', [CategoriesController::class, 'findCategory']);
     Route::put('edit/{id}', [CategoriesController::class, 'editCategory']);
@@ -59,12 +65,14 @@ Route::group([
 
 
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'devis'
 ], function ($router) {
 
     Route::get('', [DevisController::class, 'index']);
     Route::get('allPaginate', [DevisController::class, 'getDevisPaginate']);
     Route::get('{id}', [DevisController::class, 'show']);
+    Route::get('{id}/services', [DevisController::class, 'getDevisItemByDevis']);
     Route::get('search/{searchQuery}', [DevisController::class, 'search']);
 
     Route::post('create', [DevisController::class, 'store']);
@@ -72,16 +80,15 @@ Route::group([
     Route::delete('delete/{id}', [DevisController::class, 'destroy']);
     Route::post('send-pdf/{clientId}', [MailingController::class, 'sendPdfToClient']);
     Route::patch('{id}/status', [DevisController::class, 'updateStatus']);
+
+
 });
 
-Route::get('clients/allPaginate', [ClientController::class, 'getClientsPaginate']);
-Route::get('clients/findPaginate', [ClientController::class, 'findClientPaginate']);
-Route::get('clients/search/{name}', [DevisController::class, 'searchClientByName']);
-Route::apiResource('clients', ClientController::class);
 
 
 Route::group([
-    'prefix' => 'produits'
+    'middleware' => ['auth', 'api'],
+    'prefix' => 'produits',
 ], function ($router) {
 
     Route::get('', [ProduitsController::class, 'findAll']);
@@ -99,6 +106,7 @@ Route::group([
 });
 
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'accessoires',
 ], function ($router) {
 
@@ -117,6 +125,7 @@ Route::group([
 
 
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'historiques'
 ], function ($router) {
     Route::get('', [HistoriquesController::class, 'getHistoriquesPaginate']);
@@ -129,6 +138,7 @@ Route::group([
 
 
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'exceptions'
 ], function ($router) {
     Route::get('', [ExceptionsController::class, 'getExceptionsPaginate']);
@@ -140,6 +150,7 @@ Route::group([
 });
 
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'factures'
 ], function ($router) {
     Route::get('allPaginate', [FacturesController::class, 'getFacturesPaginate']);
@@ -155,6 +166,7 @@ Route::group([
 
 
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'tresorie'
 ], function ($router) {
     Route::get('allPaginate', [TresorieController::class, 'getTresoriePaginate']);
@@ -173,6 +185,7 @@ Route::group([
 });
 
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'credits'
 ], function ($router) {
     Route::get('searchByClientName/{clientName}', [CreditController::class, 'searchByClientName']);
@@ -181,9 +194,9 @@ Route::group([
     Route::get('', [CreditController::class, 'index']);
 });
 
-Route::get('send-devis/{id}', [MailingController::class, 'sendDevis']);
-Route::post('send-promotion/{id}', [MailingController::class, 'sendPromotion']);
+
 Route::group([
+    'middleware' => ['auth', 'api'],
     'prefix' => 'stats'
 ], function ($router) {
     Route::get('devis-comparison-range', [StatistiquesController::class, 'getDevisComparison']);
@@ -197,13 +210,23 @@ Route::group([
     Route::get('factures-range', [StatistiquesController::class, 'getFacturesReport']);
 });
 
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('clients/allPaginate', [ClientController::class, 'getClientsPaginate']);
+    Route::get('clients/findPaginate', [ClientController::class, 'findClientPaginate']);
+    Route::get('clients/search/{name}', [DevisController::class, 'searchClientByName']);
+    Route::apiResource('clients', ClientController::class);
+
+    Route::apiResource('parameters', ParameterController::class);
 
 
-Route::get('taxes/search', [TaxeController::class, 'search']);
-Route::apiResource('taxes', TaxeController::class);
-Route::apiResource('promotions', PromotionsController::class);
-Route::apiResource('charges', ChargesController::class);
+    Route::get('send-devis/{id}', [MailingController::class, 'sendDevis']);
+    Route::post('send-promotion/{id}', [MailingController::class, 'sendPromotion']);
+    Route::get('taxes/search', [TaxeController::class, 'search']);
+    Route::apiResource('taxes', TaxeController::class);
+    Route::apiResource('promotions', PromotionsController::class);
+    Route::apiResource('charges', ChargesController::class);
 
 
 
-Route::post('/optimize-cuts', [CutController::class, 'optimize']);
+    Route::post('/optimize-cuts', [CutController::class, 'optimize']);
+});

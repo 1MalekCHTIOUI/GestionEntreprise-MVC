@@ -19,6 +19,13 @@ return new class extends Migration
             $table->string('ref')->unique()->nullable();
             $table->date('date')->default(now());
             $table->enum('status', ['done', 'still', 'refused'])->default('still');
+            
+            $table->decimal('totalHT', 10, 2)->default(0);
+            $table->decimal('totalServices', 10, 2)->default(0);
+            $table->decimal('totalRemises', 10, 2)->default(0);
+            $table->decimal('totalFraisLivraison', 10, 2)->default(0);
+            $table->decimal('totalTTC', 10, 2)->default(0);
+
 
 
             // Foreign keys

@@ -1,27 +1,31 @@
 <?php
-
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Permission;
+use Log;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
-{/**
+{
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $roles=Role::latest()->simplepaginate(10);
-        return view('roles.index',compact('roles'));
-     }
-
+        $roles = Role::all();
+        return response()->json([
+            'success' => true,
+            'data' => $roles
+        ]);
+    }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
+        Log::info($request->all());
         $request->validate([
             'name' => 'required|unique:roles,name',
             'permission' => 'required|array',
@@ -41,7 +45,7 @@ class RoleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
         $role = Role::with('permissions')->find($id);
 
@@ -55,14 +59,13 @@ class RoleController extends Controller
         return response()->json([
             'success' => true,
             'data' => $role
-        ], 200);
+        ]);
     }
-
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
         $role = Role::find($id);
 
@@ -86,13 +89,13 @@ class RoleController extends Controller
             'success' => true,
             'message' => 'Role updated successfully.',
             'data' => $role
-        ], 200);
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
         $role = Role::find($id);
 
@@ -108,6 +111,6 @@ class RoleController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Role deleted successfully.'
-        ], 200);
+        ]);
     }
 }

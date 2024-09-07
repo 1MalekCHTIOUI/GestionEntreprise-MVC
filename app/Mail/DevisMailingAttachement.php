@@ -14,15 +14,17 @@ class DevisMailingAttachement extends Mailable
 {
     use Queueable, SerializesModels;
     public $devis;
+    public $client;
     public $parameters;
     public $pdfContent;
     /**
      * Create a new message instance.
      */
-    public function __construct($pdfContent)
+    public function __construct($client, $pdfContent)
     {
         // $this->devis = $devis;
         // $this->parameters = $parameters;
+        $this->client = $client;
         $this->pdfContent = $pdfContent;
     }
 
@@ -31,7 +33,7 @@ class DevisMailingAttachement extends Mailable
     public function build()
     {
         return $this->view('Email.devisPdf')
-            ->attachData($this->pdfContent, 'tableToPdf.pdf', [
+            ->attachData($this->pdfContent, "devis {$this->client->nom} {$this->client->prenom}.pdf", [
                 'mime' => 'application/pdf',
             ]);
     }

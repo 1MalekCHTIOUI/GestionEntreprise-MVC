@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('idDevis');
             $table->string('description');
             $table->integer('qte')->default(1);
-            $table->decimal('unit_price', 10, 2);
-            $table->decimal('total_price', 10, 2);
+            $table->decimal('cost', 10, 2);
+
             $table->timestamps();
 
             // Foreign key constraint

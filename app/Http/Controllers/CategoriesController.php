@@ -104,7 +104,7 @@ class CategoriesController extends Controller
                 'data_before' => null,
                 'data_after' => $new->getAttributes(),
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
             return response()->json($new);
         } catch (\Exception $th) {
@@ -127,16 +127,6 @@ class CategoriesController extends Controller
             return response()->error("Not found");
         }
 
-
-        // $existingSubcategories = $cat->sousCategories->pluck('id')->toArray();
-        // $requestedSubcategories = collect($request->sousCategories)->pluck('id')->toArray();
-        // $removedSousCategories = array_diff($existingSubcategories, $requestedSubcategories);
-        // Categories::whereIn('id', $removedSousCategories)->update(['idParentCateg' => null]);
-
-        // $newSousCategories = array_diff($requestedSubcategories, $existingSubcategories);
-        // Categories::whereIn('id', $newSousCategories)->update(['idParentCateg' => $cat->id]);
-
-
         $cat->titreCateg = $request->titreCateg;
         $cat->descriptionCateg = $request->descriptionCateg;
         $cat->idParentCateg = $request->categorie;
@@ -150,7 +140,7 @@ class CategoriesController extends Controller
                 'data_before' => $dataBefore,
                 'data_after' => $cat->getAttributes(),
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
             return response()->json($s);
         } catch (\Exception $th) {
@@ -188,7 +178,7 @@ class CategoriesController extends Controller
                 'data_before' => $dataBefore,
                 'data_after' => null,
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
             return response()->json($cat, 200);
         } catch (\Exception $th) {
@@ -198,7 +188,20 @@ class CategoriesController extends Controller
             ]);
             return response()->error("Failed to delete category");
         }
+    }
 
-        return response()->json($cat);
+    public function search(Request $request)
+    {
+        Log::error('Search results:', ['results' => $request->all()]);
+
+        $query = $request->input('query');
+        $limit = $request->input('limit', 30);
+
+        if ($query) {
+            $results = Categories::where('titreCateg', 'LIKE', '%' . $query . '%')->limit($limit)->get();
+        } else {
+            $results = Categories::limit($limit)->get();
+        }
+        return response()->json($results);
     }
 }

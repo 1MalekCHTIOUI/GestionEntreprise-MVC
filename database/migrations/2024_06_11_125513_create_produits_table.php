@@ -25,6 +25,7 @@ return new class extends Migration
             $table->float('largeur')->nullable();
             $table->float('hauteur')->nullable();
             $table->float('profondeur')->nullable();
+            $table->string('couleur')->nullable();
             $table->float('tempsProduction')->nullable();
             $table->text('matiers')->nullable();
             $table->text('description')->nullable();

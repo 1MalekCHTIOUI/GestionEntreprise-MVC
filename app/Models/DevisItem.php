@@ -12,9 +12,8 @@ class DevisItem extends Model
     protected $fillable = [
         'idDevis',
         'description',
-        'quantity',
-        'unit_price',
-        'total_price',
+        'qte',
+        'cost'
     ];
 
     // Define the relationship with Devis

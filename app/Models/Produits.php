@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Cut;
 class Produits extends Model
 {
     use HasFactory;
@@ -22,6 +22,7 @@ class Produits extends Model
         'largeur',
         'hauteur',
         'profondeur',
+        'couleur',
         'tempsProduction',
         'matiers',
         'description',
@@ -59,5 +60,10 @@ class Produits extends Model
     public function promotions()
     {
         return $this->belongsToMany(Promotion::class, 'promotions_produits', 'idProduit', 'idPromotion');
+    }
+
+    public function cuts()
+    {
+        return $this->hasMany(Cut::class, 'idProduit');
     }
 }

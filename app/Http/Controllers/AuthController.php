@@ -28,7 +28,7 @@ class AuthController extends Controller
     {
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth()->attempt($credentials)) {
+        if (!$token = auth()->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -97,5 +97,18 @@ class AuthController extends Controller
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);
+    }
+
+    public function verifyToken(Request $request)
+    {
+        // The request is automatically authenticated by Sanctum's middleware
+        // If the request passes through the middleware, the token is valid
+        // return response()->json(['status' => true, 'user' => $request->user()], 200);
+
+        if ($request->user()) {
+            return response()->json(['status' => true, 'user' => $request->user()]);
+        } else {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
     }
 }

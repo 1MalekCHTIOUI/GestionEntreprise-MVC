@@ -22,13 +22,29 @@ class ClientController extends Controller
             'clients' => $clients
         ]);
     }
-    public function getClientsPaginate(Request $request): JsonResponse
+    public function getClientsPaginate(Request $request)
     {
-        $clients = Client::orderBy('created_at', 'desc')->paginate(config('global.pagination.perPage'));
+        try {
+            // Log the request parameters for debugging
+            Log::info('Request parameters:', $request->all());
 
-        return response()->json(
-            $clients
-        );
+            // Fetch clients with pagination
+            $clients = Client::paginate(10);
+
+            // Log the query result for debugging
+            Log::info('Clients fetched:', $clients->toArray());
+
+            if ($clients->isEmpty()) {
+                return response()->json(['message' => 'Client not found'], 404);
+            }
+
+            return response()->json($clients, 200);
+        } catch (\Exception $e) {
+            // Log the exception for debugging
+            Log::error('Error fetching clients:', ['error' => $e->getMessage()]);
+
+            return response()->json(['message' => 'An error occurred while fetching clients'], 500);
+        }
     }
 
     public function findClientPaginate(Request $request): JsonResponse

@@ -57,7 +57,7 @@ class TresorieController extends Controller
                 'data_before' => null,
                 'data_after' => $tresorie->getAttributes(),
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
             $totalPayments = Tresorie::where('numFacture', $request->numFacture)->sum('montant');
@@ -83,7 +83,7 @@ class TresorieController extends Controller
                 'data_before' => null,
                 'data_after' => $credit->getAttributes(),
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
 
@@ -153,7 +153,7 @@ class TresorieController extends Controller
                 'data_before' => $dataBefore,
                 'data_after' => $tresorie->getAttributes(),
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
             return response()->json(['message' => 'Tresorie record updated successfully.', 'tresorie' => $tresorie]);
@@ -185,7 +185,7 @@ class TresorieController extends Controller
                 'data_before' => $dataBefore,
                 'data_after' => null,
                 'changed_at' => now(),
-                'changed_by' =>  null,
+                'changed_by' => null,
             ]);
 
 
@@ -230,9 +230,9 @@ class TresorieController extends Controller
     public function getFacturePaiements(string $numFacture)
     {
         $totalPayments = Tresorie::where('numFacture', $numFacture)->sum('montant');
-        $facture = Factures::where('ref', $numFacture)->first();
+        $facture = Factures::with('devis')->where('ref', $numFacture)->first();
 
-        $remainingBalance = $facture->totalTTC - $totalPayments;
+        $remainingBalance = $facture->devis->totalTTC - $totalPayments;
         if ($remainingBalance <= 0) {
             $remainingBalance = 0;
         }
